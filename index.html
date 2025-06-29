@@ -1,46 +1,44 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Click to Trigger Effect</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background: transparent;
+<script>
+  const ws = new WebSocket("wss://your-ngrok-url-here");
+  const canvas = document.getElementById("clickArea");
+
+  canvas.addEventListener("click", (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const username = new URLSearchParams(window.location.search).get("user") || "anonymous";
+
+    ws.send(JSON.stringify({
+      event: "viewer_click",
+      viewer: username,
+      x: x,
+      y: y
+    }));
+
+    document.getElementById("instructions").textContent = "Effect sent!";
+  });
+
+  // 🔊 Listen for events back from your Streamer.bot WebSocket server
+  ws.onmessage = (msg) => {
+    const data = JSON.parse(msg.data);
+    if (data.event === "play_effect") {
+      showEffect(data.x, data.y);
     }
+  };
 
-    canvas, video, img {
-      position: absolute;
-      pointer-events: none; /* prevents blocking clicks */
-    }
-  </style>
+  // 🎬 Function to show the transparent video at a location
+  function showEffect(x, y) {
+    const video = document.createElement("video");
+    video.src = "output.webm"; // Must be in the same GitHub repo folder
+    video.autoplay = true;
+    video.muted = true;
+    video.playsInline = true;
 
-</head>
-<body>
-  <div id="instructions"></div>
-  <canvas id="clickArea"></canvas>
-  <script>
-    const ws = new WebSocket("wss://efb7-69-40-22-80.ngrok-free.app");
-    const canvas = document.getElementById("clickArea");
+    video.style.position = "absolute";
+    video.style.left = `${x}px`;
+    video.style.top = `${y}px`;
+    video.style.pointerEvents = "none";
+    video.style.width = "150px"; // adjust size as needed
 
-    canvas.addEventListener("click", (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      const username = new URLSearchParams(window.location.search).get("user") || "anonymous";
-
-      ws.send(JSON.stringify({
-        event: "viewer_click",
-        viewer: username,
-        x: x,
-        y: y
-      }));
-
-      document.getElementById("instructions").textContent = "Effect sent!";
-    });
-  </script>
-</body>
-</html>
+    document.body.app
