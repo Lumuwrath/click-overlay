@@ -21,41 +21,47 @@
   <div id="instructions"></div>
   <canvas id="clickArea"></canvas>
 
-  <!-- ✅ JavaScript goes here -->
   <script>
+    // 🔌 Connect to your ngrok WebSocket tunnel
     const ws = new WebSocket("wss://efb7-69-40-22-80.ngrok-free.app");
+
     const canvas = document.getElementById("clickArea");
 
+    // 🎯 Get viewer username from URL (e.g. ?user=someViewer)
+    const username = new URLSearchParams(window.location.search).get("user") || "anonymous";
+
+    // 🖱️ Send click data to server
     canvas.addEventListener("click", (e) => {
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
 
-      const username = new URLSearchParams(window.location.search).get("user") || "anonymous";
-
-      // Send click info to server
       ws.send(JSON.stringify({
-        event: "viewer_click",
-        viewer: username,
+        event: "click",
+        username: username,
         x: x,
         y: y
       }));
 
-      document.getElementById("instructions").textContent = "Effect sent!";
+      document.getElementById("instructions").textContent = "Effect triggered!";
     });
 
-    // ✅ Listen for "play_effect" message from server
+    // 🧪 Optional: If server sends back an effect command
     ws.onmessage = (msg) => {
-      const data = JSON.parse(msg.data);
-      if (data.event === "play_effect") {
-        showEffect(data.x, data.y);
+      try {
+        const data = JSON.parse(msg.data);
+        if (data.event === "play_effect") {
+          showEffect(data.x, data.y);
+        }
+      } catch (e) {
+        console.error("Invalid WebSocket message:", msg.data);
       }
     };
 
-    // ✅ Dynamically create and play the video at clicked location
+    // 💥 Show visual effect at given (x, y) on screen
     function showEffect(x, y) {
       const video = document.createElement("video");
-      video.src = "output.webm"; // 🔄 adjust if it's in a subfolder
+      video.src = "output.webm"; // Replace with your effect video
       video.autoplay = true;
       video.muted = true;
       video.playsInline = true;
@@ -64,11 +70,9 @@
       video.style.left = `${x}px`;
       video.style.top = `${y}px`;
       video.style.pointerEvents = "none";
-      video.style.width = "150px"; // adjust size if needed
+      video.style.width = "150px";
 
       document.body.appendChild(video);
-
-      // Remove it after playing once
       video.onended = () => video.remove();
     }
   </script>
