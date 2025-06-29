@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Click to Trigger Effect</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #000;
+      color: white;
+      font-family: sans-serif;
+    }
+    #instructions {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1;
+    }
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.8);
+    }
+  </style>
+</head>
+<body>
+  <div id="instructions">Click anywhere to trigger the effect!</div>
+  <canvas id="clickArea"></canvas>
+  <script>
+    const ws = new WebSocket("wss://efb7-69-40-22-80.ngrok-free.app");
+    const canvas = document.getElementById("clickArea");
+
+    canvas.addEventListener("click", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const username = new URLSearchParams(window.location.search).get("user") || "anonymous";
+
+      ws.send(JSON.stringify({
+        event: "viewer_click",
+        viewer: username,
+        x: x,
+        y: y
+      }));
+
+      document.getElementById("instructions").textContent = "Effect sent!";
+    });
+  </script>
+</body>
+</html>
